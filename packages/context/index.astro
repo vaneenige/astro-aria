@@ -1,0 +1,50 @@
+---
+interface Props<Dictionary> {
+  dictionary: Dictionary;
+  attributes: Record<string, (string | boolean)[]>;
+  modifier?: (html: string, dictionary: Dictionary) => string;
+}
+
+const { dictionary, attributes, modifier } = Astro.props;
+
+// Render the default slot content
+let html = await Astro.slots.render("default");
+
+// Optionally modify the rendered html before replace
+if (modifier) html = modifier(html, dictionary);
+
+// Replace attributes with pattern attribute="($context:key:value?)"
+html = html.replace(
+  /([\w-]+)=["]\(\$context:([\w-]+):([\w-]+)\)["]/g,
+  (match, attribute, key, value) => {
+    // Return original if replacement key not found
+    if (!dictionary[key]) return match;
+
+    // Get the appropriate attribute value based on condition
+    const option = (attributes[attribute] || ["true", "false"])[
+      dictionary[key] === value ? 0 : 1
+    ];
+
+    // Return modified attribute or remove it if false
+    if (typeof option === "boolean") {
+      return option ? attribute : "";
+    }
+
+    // Return the attribute with the new string value
+    return `${attribute}="${option}"`;
+  }
+);
+
+// Replace placeholders with pattern ($context:key) with corresponding values
+html = html.replace(
+  /\(\$context:([\w-]+)\)/g,
+  (match, key) => dictionary[key] || match
+);
+
+// Function to create context placeholders
+export function context(propertyName: string, match?: string): any {
+  return `($context:${propertyName}${match ? ":" + match : ""})`;
+}
+---
+
+<Fragment set:html={html} />
