@@ -1,0 +1,5 @@
+---
+import { context } from "@astro-aria/context";
+---
+
+<div role="tablist" aria-orientation={context("orientation")} {...Astro.props}><slot /></div>

@@ -1,0 +1,18 @@
+---
+import { context } from "@astro-aria/context";
+import { hasFocusableElement } from "./hasFocusableElement";
+
+const { id = "$id", ...nodeProps } = Astro.props;
+
+const html = await Astro.slots.render("default");
+---
+
+<div
+  role="tabpanel"
+  id={`tabpanel:${context("uuid")}:${id}`}
+  aria-labelledby={`tab:${context("uuid")}:${id}`}
+  tabindex={hasFocusableElement(html) ? "-1" : "0"}
+  hidden={context("value", id)}
+  data-state={context("value", id)}
+  {...nodeProps}
+><Fragment set:html={html} /></div>

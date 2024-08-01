@@ -1,0 +1,124 @@
+---
+import Context from "@astro-aria/context";
+import { increment } from "./increment";
+
+interface Props {
+  sync?: string;
+  orientation?: "horizontal" | "vertical";
+  activationMode?: "automatic" | "manual";
+  value?: string;
+  [key: string]: any;
+}
+
+const { orientation, activationMode, value, sync, ...nodeProps } = Astro.props;
+
+const dictionary = {
+  uuid: increment(),
+  orientation: orientation || "horizontal",
+  activationMode: activationMode || "automatic",
+  value,
+};
+---
+
+<Context
+  dictionary={dictionary}
+  attributes={{
+    tabindex: ["0", "-1"],
+    "data-state": ["active", "inactive"],
+    hidden: [false, true],
+  }}
+  modifier={(html, dictionary) => {
+    let tabIndex = 0;
+    html = html.replace(/role="tab"[^>]*>/g, (match) =>
+      match.replaceAll("$id", (tabIndex += 1).toString())
+    );
+    let tabPanelIndex = 0;
+    html = html.replace(/role="tabpanel"[^>]*>/g, (match) =>
+      match.replaceAll("$id", (tabPanelIndex += 1).toString())
+    );
+    if (!dictionary.value) {
+      const match = /id="tab:[^)]+\):([^"]+)"/.exec(html);
+      dictionary.value = match ? match[1] : undefined;
+    }
+    return html;
+  }}
+><astro-tabs
+    data-props={[
+      dictionary.uuid,
+      dictionary.orientation === "horizontal" ? "" : "1",
+      dictionary.activationMode === "automatic" ? "focus" : "click",
+      sync,
+    ]}
+    {...nodeProps}
+  ><slot /></astro-tabs></Context>
+<script>
+  type Listener<T> = (state: T) => void;
+
+  const listeners: Listener<any>[] = [];
+  const [on, emit] = [
+    (listener: Listener<any>) => listeners.push(listener),
+    (state: any) => listeners.forEach((listener) => listener(state)),
+  ];
+
+  function AstroTab(root: HTMLElement) {
+    const [id, orientation, activation, sync] = root.dataset.props!.split(",");
+
+    const tabs = root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`);
+    const panels = root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`);
+      
+    const { length } = tabs;
+    const horizontal = !orientation;
+
+    const keyActions = {
+      [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) =>
+        (i + 1) % length,
+      [horizontal ? "ArrowLeft" : "ArrowUp"]: (i: number) =>
+        (i - 1 + length) % length,
+      Home: () => 0,
+      End: () => length - 1,
+    };
+
+    function activateTabByIndex(index: number) {
+      const tab = tabs[index];
+
+      panels.forEach((p) => {
+        const match = p.id !== tab.getAttribute("aria-controls");
+        p.hidden = match;
+        p.dataset.state = !match ? "active" : "inactive";
+      });
+
+      tabs.forEach((t, i) => {
+        const match = i === index;
+        t.setAttribute("aria-selected", match ? "true" : "false");
+        t.setAttribute("tabindex", match ? "0" : "-1");
+        t.dataset.state = match ? "active" : "inactive";
+      });
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("keydown", (e) => {
+        const focusTargetIndex = keyActions[e.key]?.(i) ?? i;
+        if (focusTargetIndex !== i) {
+          e.preventDefault();
+          tabs[focusTargetIndex].focus();
+        }
+      });
+
+      tab.addEventListener(activation, () => {
+        if (sync) {
+          emit([sync, i]);
+        } else {
+          activateTabByIndex(i);
+        }
+      });
+    });
+
+    on(([tagName, index]) => {
+      if (tagName === sync) {
+        activateTabByIndex(index);
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>("astro-tabs").forEach(AstroTab);
+</script>
