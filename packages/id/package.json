@@ -1,0 +1,7 @@
+{
+  "name": "@astro-aria/id",
+  "version": "0.0.1",
+  "main": "index.ts",
+  "author": "Colin van Eenige",
+  "license": "MIT"
+}
