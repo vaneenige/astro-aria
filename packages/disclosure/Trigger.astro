@@ -4,4 +4,4 @@ import { context } from "@astro-aria/context";
 const { ...nodeProps } = Astro.props;
 ---
 
-<button type="button" id={`trigger:${context('uuid')}`} aria-controls={`content:${context('uuid')}`} aria-expanded={context('open')} data-state={context('open')} {...nodeProps}><slot /></button>
+<button type="button" id={`trigger:${context('id')}`} aria-controls={`content:${context('id')}`} aria-expanded={context('open')} data-state={context('open')} {...nodeProps}><slot /></button>

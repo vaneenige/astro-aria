@@ -1,6 +1,6 @@
 ---
 import Context from "@astro-aria/context";
-import { increment } from "./increment";
+import id from '@astro-aria/id'
 
 interface Props {
   open?: boolean;
@@ -10,7 +10,7 @@ interface Props {
 const { open, ...nodeProps } = Astro.props;
 
 const dictionary = {
-  uuid: increment(),
+  id: id(),
   open: open || false,
 };
 ---
@@ -22,7 +22,7 @@ const dictionary = {
     hidden: [false, true],
   }}
   ><astro-disclosure
-    data-props={[dictionary.uuid, dictionary.open ? "" : "1"]}
+    data-props={[dictionary.id, dictionary.open ? "" : "1"]}
     {...nodeProps}><slot /></astro-disclosure
   ></Context
 >
