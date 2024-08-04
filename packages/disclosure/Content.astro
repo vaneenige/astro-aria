@@ -1,0 +1,7 @@
+---
+import { context } from "@astro-aria/context";
+
+const { ...nodeProps } = Astro.props;
+---
+
+<div id={`content:${context('uuid')}`} aria-labelledby={`trigger:${context('uuid')}`} data-state={context('open')} hidden={context('open')} {...nodeProps}><slot /></div>

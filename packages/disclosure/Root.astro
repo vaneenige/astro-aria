@@ -1,0 +1,51 @@
+---
+import Context from "@astro-aria/context";
+import { increment } from "./increment";
+
+interface Props {
+  open?: boolean;
+  [key: string]: any;
+}
+
+const { open, ...nodeProps } = Astro.props;
+
+const dictionary = {
+  uuid: increment(),
+  open: open || false,
+};
+---
+
+<Context
+  dictionary={dictionary}
+  attributes={{
+    "data-state": ["active", "inactive"],
+    hidden: [false, true],
+  }}
+  ><astro-disclosure
+    data-props={[dictionary.uuid, dictionary.open ? "" : "1"]}
+    {...nodeProps}><slot /></astro-disclosure
+  ></Context
+>
+<script>
+  function AstroDisclosure(root: HTMLElement) {
+    const [id, open] = root.dataset.props!.split(",");
+
+    const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
+    const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
+
+    if (trigger && content) {
+      let isOpen = !open;
+      trigger.addEventListener("click", () => {
+        isOpen = !isOpen;
+        trigger.dataset.state = isOpen ? "active" : "inactive";
+        content.dataset.state = isOpen ? "active" : "inactive";
+        trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        content.hidden = !isOpen;
+      });
+    }
+  }
+
+  document
+    .querySelectorAll<HTMLElement>("astro-disclosure")
+    .forEach(AstroDisclosure);
+</script>
