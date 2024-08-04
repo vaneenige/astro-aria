@@ -6,10 +6,10 @@ const { id = "$id", ...nodeProps } = Astro.props;
 
 <button
   role="tab"
-  id={`tab:${context("uuid")}:${id}`}
+  id={`tab:${context("id")}:${id}`}
   aria-selected={context("value", id)}
   tabindex={context("value", id)}
-  aria-controls={`tabpanel:${context("uuid")}:${id}`}
+  aria-controls={`tabpanel:${context("id")}:${id}`}
   data-state={context("value", id)}
   {...nodeProps}
 ><slot /></button>

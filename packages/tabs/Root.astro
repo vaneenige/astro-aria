@@ -1,6 +1,6 @@
 ---
 import Context from "@astro-aria/context";
-import { increment } from "./increment";
+import id from '@astro-aria/id';
 
 interface Props {
   sync?: string;
@@ -13,7 +13,7 @@ interface Props {
 const { orientation, activationMode, value, sync, ...nodeProps } = Astro.props;
 
 const dictionary = {
-  uuid: increment(),
+  id: id(),
   orientation: orientation || "horizontal",
   activationMode: activationMode || "automatic",
   value,
@@ -44,7 +44,7 @@ const dictionary = {
   }}
 ><astro-tabs
     data-props={[
-      dictionary.uuid,
+      dictionary.id,
       dictionary.orientation === "horizontal" ? "" : "1",
       dictionary.activationMode === "automatic" ? "focus" : "click",
       sync,

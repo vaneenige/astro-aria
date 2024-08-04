@@ -1,10 +1,11 @@
 {
   "name": "@astro-aria/tabs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "index.ts",
   "author": "Colin van Eenige",
   "license": "MIT",
   "dependencies": {
-    "@astro-aria/context": "^0.0.1"
+    "@astro-aria/context": "^0.0.2",
+    "@astro-aria/id": "^0.0.1"
   }
 }
