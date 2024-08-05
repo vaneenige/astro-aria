@@ -36,7 +36,7 @@ html = html.replace(
 // Replace placeholders with pattern ($context:key) with corresponding values
 html = html.replace(
   /\(\$context:([\w-]+)\)/g,
-  (match, key) => dictionary[key] || match
+  (match, key) => !(key in dictionary) ? match : dictionary[key]
 );
 
 // Function to create context placeholders
