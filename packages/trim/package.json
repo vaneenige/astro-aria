@@ -1,0 +1,7 @@
+{
+  "name": "@astro-aria/trim",
+  "version": "0.0.1",
+  "main": "index.astro",
+  "author": "Colin van Eenige",
+  "license": "MIT"
+}

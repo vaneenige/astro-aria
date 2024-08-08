@@ -1,0 +1,26 @@
+---
+// Render the default slot content
+let html = await Astro.slots.render("default");
+
+// Store extracted <code> content temporarily
+const codeContent: string[] = [];
+
+html = html
+  // Extract <code> content, replace with a placeholder
+  .replace(/<code[^>]*>[\s\S]*?<\/code>/g, (match) => {
+    codeContent.push(match);
+    return "{{CODE}}";
+  })
+  // Remove spaces between tags
+  .replace(/>\s+</g, "><")
+  // Remove newline characters and sequences of more than two spaces
+  .replace(/\n|\s{2,}/g, "")
+  // Remove space after an opening tag and before text
+  .replace(/(<\w+[^>]*>)\s+([^\s<]+)/g, "$1$2")
+  // Remove space before a closing tag and after text
+  .replace(/([^\s<]+)\s+(<\/\w+>)/g, "$1$2")
+  // Reinsert <code> content from placeholders
+  .replace(/{{CODE}}/g, () => codeContent.shift()!);
+---
+
+<Fragment set:html={html} />
