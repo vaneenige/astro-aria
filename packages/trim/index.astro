@@ -13,8 +13,10 @@ html = html
   })
   // Remove spaces between tags
   .replace(/>\s+</g, "><")
-  // Remove newline characters and sequences of more than two spaces
-  .replace(/\n|\s{2,}/g, "")
+  // Remove newline characters between spaces
+  .replace(/\s+\n\s+|\s+\n|\n\s+/g, "")
+  // Remove sequences of multiple spaces
+  .replace(/\s{2,}/g, "")
   // Remove space after an opening tag and before text
   .replace(/(<\w+[^>]*>)\s+([^\s<]+)/g, "$1$2")
   // Remove space before a closing tag and after text
