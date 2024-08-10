@@ -5,17 +5,17 @@ import id from '@astro-aria/id';
 interface Props {
   sync?: string;
   orientation?: "horizontal" | "vertical";
-  activationMode?: "automatic" | "manual";
+  activation?: "automatic" | "manual";
   value?: string;
   [key: string]: any;
 }
 
-const { orientation, activationMode, value, sync, ...nodeProps } = Astro.props;
+const { orientation, activation, value, sync, ...nodeProps } = Astro.props;
 
 const dictionary = {
   id: id(),
   orientation: orientation || "horizontal",
-  activationMode: activationMode || "automatic",
+  activation: activation || "automatic",
   value,
 };
 ---
@@ -46,7 +46,7 @@ const dictionary = {
     data-props={[
       dictionary.id,
       dictionary.orientation === "horizontal" ? "" : "1",
-      dictionary.activationMode === "automatic" ? "focus" : "click",
+      dictionary.activation === "automatic" ? "focus" : "click",
       sync,
     ]}
     {...nodeProps}
