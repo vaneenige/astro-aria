@@ -1,7 +1,20 @@
 ---
 import { context } from "@astro-aria/context";
 
-const { ...nodeProps } = Astro.props;
+type Props = {
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
 ---
 
-<button type="button" id={`trigger:${context('id')}`} aria-controls={`content:${context('id')}`} aria-expanded={context('open')} data-state={context('open')} {...nodeProps}><slot /></button>
+<button
+  type="button"
+  id={`trigger:${context("id")}`}
+  aria-controls={`content:${context("id")}`}
+  aria-expanded={context("open")}
+  data-state={context("open")}
+  {...attributes}
+>
+  <slot />
+</button>

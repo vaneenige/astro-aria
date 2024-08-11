@@ -1,13 +1,14 @@
 ---
 import Context from "@astro-aria/context";
-import id from '@astro-aria/id'
+import id from "@astro-aria/id";
+import Trim from "@astro-aria/trim";
 
-interface Props {
+type Props = {
   open?: boolean;
-  [key: string]: any;
-}
+  [x: string]: any;
+};
 
-const { open, ...nodeProps } = Astro.props;
+const { open, ...attributes } = Astro.props;
 
 const dictionary = {
   id: id(),
@@ -15,17 +16,20 @@ const dictionary = {
 };
 ---
 
-<Context
-  dictionary={dictionary}
-  attributes={{
-    "data-state": ["active", "inactive"],
-    hidden: [false, true],
-  }}
-  ><astro-disclosure
-    data-props={[dictionary.id, dictionary.open ? "" : "1"]}
-    {...nodeProps}><slot /></astro-disclosure
-  ></Context
->
+<Trim>
+  <Context
+    dictionary={dictionary}
+    attributes={{
+      "data-state": ["active", "inactive"],
+      hidden: [false, true],
+    }}
+  >
+    <astro-disclosure data-props={[dictionary.id, dictionary.open ? "" : "1"]} {...attributes}>
+      <slot />
+    </astro-disclosure>
+  </Context>
+</Trim>
+
 <script>
   function AstroDisclosure(root: HTMLElement) {
     const [id, open] = root.dataset.props!.split(",");
@@ -45,7 +49,5 @@ const dictionary = {
     }
   }
 
-  document
-    .querySelectorAll<HTMLElement>("astro-disclosure")
-    .forEach(AstroDisclosure);
+  document.querySelectorAll<HTMLElement>("astro-disclosure").forEach(AstroDisclosure);
 </script>

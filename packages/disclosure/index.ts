@@ -3,16 +3,16 @@ import Root from "./Root.astro";
 import Trigger from "./Trigger.astro";
 
 const Disclosure = {
+  Content,
   Root,
   Trigger,
-  Content,
 };
 
 export default Disclosure;
 
-export function extend(extended: any) {
+export function extend(extended: { [x: string]: any }) {
   return {
     ...Disclosure,
-    ...extended
+    ...extended,
   };
 }
