@@ -1,16 +1,17 @@
 ---
 import Context from "@astro-aria/context";
-import id from '@astro-aria/id';
+import id from "@astro-aria/id";
+import Trim from "@astro-aria/trim";
 
-interface Props {
+type Props = {
   sync?: string;
   orientation?: "horizontal" | "vertical";
   activation?: "automatic" | "manual";
   value?: string;
-  [key: string]: any;
-}
+  [x: string]: any;
+};
 
-const { orientation, activation, value, sync, ...nodeProps } = Astro.props;
+const { orientation, activation, value, sync, ...attributes } = Astro.props;
 
 const dictionary = {
   id: id(),
@@ -20,37 +21,44 @@ const dictionary = {
 };
 ---
 
-<Context
-  dictionary={dictionary}
-  attributes={{
-    tabindex: ["0", "-1"],
-    "data-state": ["active", "inactive"],
-    hidden: [false, true],
-  }}
-  modifier={(html, dictionary) => {
-    let tabIndex = 0;
-    html = html.replace(/role="tab"[^>]*>/g, (match) =>
-      match.replaceAll("$id", (tabIndex += 1).toString())
-    );
-    let tabPanelIndex = 0;
-    html = html.replace(/role="tabpanel"[^>]*>/g, (match) =>
-      match.replaceAll("$id", (tabPanelIndex += 1).toString())
-    );
-    if (!dictionary.value) {
-      const match = /id="tab:[^)]+\):([^"]+)"/.exec(html);
-      dictionary.value = match ? match[1] : undefined;
-    }
-    return html;
-  }}
-><astro-tabs
-    data-props={[
-      dictionary.id,
-      dictionary.orientation === "horizontal" ? "" : "1",
-      dictionary.activation === "automatic" ? "focus" : "click",
-      sync,
-    ]}
-    {...nodeProps}
-  ><slot /></astro-tabs></Context>
+<Trim>
+  <Context
+    dictionary={dictionary}
+    attributes={{
+      tabindex: ["0", "-1"],
+      "data-state": ["active", "inactive"],
+      hidden: [false, true],
+    }}
+    modifier={(html) => {
+      let tabIndex = 0;
+      html = html.replace(/role="tab"[^>]*>/g, (match) =>
+        match.replaceAll("$id", (tabIndex += 1).toString()),
+      );
+      let tabPanelIndex = 0;
+      html = html.replace(/role="tabpanel"[^>]*>/g, (match) =>
+        match.replaceAll("$id", (tabPanelIndex += 1).toString()),
+      );
+      if (!dictionary.value) {
+        const match = /id="tab:[^)]+\):([^"]+)"/.exec(html);
+        dictionary.value = match ? match[1] : undefined;
+      }
+      return html;
+    }}
+  >
+    <astro-tabs
+      data-props={[
+        dictionary.id,
+        dictionary.orientation === "horizontal" ? "" : "1",
+        dictionary.activation === "automatic" ? "focus" : "click",
+        sync,
+      ]}
+      {...attributes}
+    >
+      <slot />
+    </astro-tabs>
+  </Context>
+</Trim>
+
 <script>
   type Listener<T> = (state: T) => void;
 
@@ -65,15 +73,13 @@ const dictionary = {
 
     const tabs = root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`);
     const panels = root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`);
-      
+
     const { length } = tabs;
     const horizontal = !orientation;
 
     const keyActions = {
-      [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) =>
-        (i + 1) % length,
-      [horizontal ? "ArrowLeft" : "ArrowUp"]: (i: number) =>
-        (i - 1 + length) % length,
+      [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) => (i + 1) % length,
+      [horizontal ? "ArrowLeft" : "ArrowUp"]: (i: number) => (i - 1 + length) % length,
       Home: () => 0,
       End: () => length - 1,
     };

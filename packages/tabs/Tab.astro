@@ -1,7 +1,12 @@
 ---
 import { context } from "@astro-aria/context";
 
-const { id = "$id", ...nodeProps } = Astro.props;
+type Props = {
+  id?: string;
+  [x: string]: any;
+};
+
+const { id = "$id", ...attributes } = Astro.props;
 ---
 
 <button
@@ -11,5 +16,7 @@ const { id = "$id", ...nodeProps } = Astro.props;
   tabindex={context("value", id)}
   aria-controls={`tabpanel:${context("id")}:${id}`}
   data-state={context("value", id)}
-  {...nodeProps}
-><slot /></button>
+  {...attributes}
+>
+  <slot />
+</button>

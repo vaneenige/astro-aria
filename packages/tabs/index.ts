@@ -12,9 +12,9 @@ const Tabs = {
 
 export default Tabs;
 
-export function extend(extended: any) {
+export function extend(extended: { [x: string]: any }) {
   return {
     ...Tabs,
-    ...extended
+    ...extended,
   };
 }

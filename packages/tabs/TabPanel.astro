@@ -2,7 +2,12 @@
 import { context } from "@astro-aria/context";
 import { hasFocusableElement } from "./hasFocusableElement";
 
-const { id = "$id", ...nodeProps } = Astro.props;
+type Props = {
+  id?: string;
+  [x: string]: any;
+};
+
+const { id = "$id", ...attributes } = Astro.props;
 
 const html = await Astro.slots.render("default");
 ---
@@ -14,5 +19,7 @@ const html = await Astro.slots.render("default");
   tabindex={hasFocusableElement(html) ? "-1" : "0"}
   hidden={context("value", id)}
   data-state={context("value", id)}
-  {...nodeProps}
-><Fragment set:html={html} /></div>
+  {...attributes}
+>
+  <Fragment set:html={html} />
+</div>

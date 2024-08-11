@@ -1,5 +1,14 @@
 ---
 import { context } from "@astro-aria/context";
+
+type Props = {
+  "aria-label"?: string;
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
 ---
 
-<div role="tablist" aria-orientation={context("orientation")} {...Astro.props}><slot /></div>
+<div role="tablist" aria-orientation={context("orientation")} {...attributes}>
+  <slot />
+</div>
