@@ -1,42 +1,40 @@
 ---
-interface Props<Dictionary> {
-  dictionary: Dictionary;
-  attributes: Record<string, (string | boolean)[]>;
-  modifier?: (html: string, dictionary: Dictionary) => string;
-}
+type Props = {
+  dictionary: Record<string, any>;
+  attributes?: Record<string, (string | boolean)[]>;
+  modifier?: (html: string) => string;
+};
 
-const { dictionary, attributes, modifier } = Astro.props;
+const { dictionary, attributes = {}, modifier } = Astro.props;
 
 // Render the default slot content
 let html = await Astro.slots.render("default");
 
 // Optionally modify the rendered HTML before replace
-if (modifier) html = modifier(html, dictionary);
+if (modifier) html = modifier(html);
 
 // Replace attributes with pattern attribute="($context:key:value?)"
 html = html.replace(
   /([\w-]+)=["]\(\$context:([\w-]+)(?::([\w-]+))?\)["]/g,
   (match, attribute, key, value) => {
-
     // Return original if replacement key not found
     if (!(key in dictionary)) return match;
 
     // Get value from dictionary and check if it matches the provided value or is true
     const contextValue = dictionary[key];
-    const isMatch = typeof contextValue === 'boolean' ? contextValue : contextValue === value;
+    const isMatch = typeof contextValue === "boolean" ? contextValue : contextValue === value;
 
     // Get the appropriate attribute value based on condition
     const option = (attributes[attribute] || ["true", "false"])[isMatch ? 0 : 1];
 
     // Return modified attribute or remove it if false
     return typeof option === "boolean" ? (option ? attribute : "") : `${attribute}="${option}"`;
-  }
+  },
 );
 
 // Replace placeholders with pattern ($context:key) with corresponding values
-html = html.replace(
-  /\(\$context:([\w-]+)\)/g,
-  (match, key) => !(key in dictionary) ? match : dictionary[key]
+html = html.replace(/\(\$context:([\w-]+)\)/g, (match, key) =>
+  !(key in dictionary) ? match : dictionary[key],
 );
 
 // Function to create context placeholders
