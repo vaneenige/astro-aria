@@ -1,0 +1,22 @@
+---
+import { context } from "@astro-aria/context";
+
+type Props = {
+  "aria-label"?: string;
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
+---
+
+<button
+  type="button"
+  id={`trigger:${context("id")}`}
+  aria-controls={`menu:${context("id")}`}
+  aria-expanded="false"
+  aria-haspopup="true"
+  data-state="inactive"
+  {...attributes}
+>
+  <slot />
+</button>

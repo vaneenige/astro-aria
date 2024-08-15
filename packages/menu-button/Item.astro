@@ -1,0 +1,14 @@
+---
+type Props = {
+  href?: string;
+  [x: string]: any;
+};
+
+const { href, ...attributes } = Astro.props;
+---
+
+<li role="none" {...attributes}>
+  <a role="menuitem" href={href} tabindex="-1">
+    <slot />
+  </a>
+</li>

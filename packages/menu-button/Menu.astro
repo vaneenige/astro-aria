@@ -1,0 +1,20 @@
+---
+import { context } from "@astro-aria/context";
+
+type Props = {
+  id?: string;
+};
+
+const { ...attributes } = Astro.props;
+---
+
+<ul
+  role="menu"
+  id={`menu:${context("id")}`}
+  aria-labelledby={`trigger:${context("id")}`}
+  hidden
+  data-state="inactive"
+  {...attributes}
+>
+  <slot />
+</ul>

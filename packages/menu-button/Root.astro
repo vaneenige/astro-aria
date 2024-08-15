@@ -1,0 +1,122 @@
+---
+import Context from "@astro-aria/context";
+import id from "@astro-aria/id";
+import Trim from "@astro-aria/trim";
+
+type Props = {
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
+
+const dictionary = {
+  id: id(),
+};
+---
+
+<Trim>
+  <Context dictionary={dictionary}>
+    <astro-menu-button data-props={[dictionary.id]} {...attributes}>
+      <slot />
+    </astro-menu-button>
+  </Context>
+</Trim>
+
+<script>
+  function AstroMenuButton(root: HTMLElement) {
+    // Extract unique ID from root element's data attribute
+    const [id] = root.dataset.props!.split(",");
+
+    // Select trigger button and menu element using the extracted ID
+    const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`)!;
+    const menu = root.querySelector<HTMLElement>(`[id="menu:${id}"]`)!;
+
+    // Collect all menu items
+    const items = root.querySelectorAll<HTMLElement>(`[role="menuitem"]`);
+
+    // Collect the first letter of each menu item's text content
+    const letters = Array.from(items).map((item) => item.textContent![0].toLowerCase());
+
+    // Toggle menu visibility, manage focus, and event listeners
+    function toggleMenu(open: boolean) {
+      trigger.setAttribute("aria-expanded", String(open));
+      trigger.dataset.state = open ? "active" : "inactive";
+      menu.dataset.state = open ? "active" : "inactive";
+      menu.hidden = !open;
+
+      if (open) {
+        // Focus on the first menu item when opened
+        items[0].focus();
+        // Add event listener to handle clicks outside the menu
+        addEventListener("click", handleOutsideClick);
+      } else {
+        // Remove outside click event listener when closed
+        removeEventListener("click", handleOutsideClick);
+      }
+    }
+
+    // Close menu when clicking outside of it
+    function handleOutsideClick(e: MouseEvent) {
+      if (!root.contains(e.target as Node)) toggleMenu(false);
+    }
+
+    // Handle keydown events on the trigger button
+    trigger.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        // Open menu and focus on first or last item based on arrow key
+        toggleMenu(true);
+        items[e.key === "ArrowDown" ? 0 : items.length - 1].focus();
+        e.preventDefault();
+      }
+    });
+
+    // Toggle menu visibility on trigger button click
+    trigger.addEventListener("click", function () {
+      toggleMenu(menu.hidden);
+    });
+
+    // Add keyboard navigation and interaction for each menu item
+    items.forEach(function (item, i) {
+      item.addEventListener("keydown", function (e: KeyboardEvent) {
+        if (e.key === "Escape" || e.key === "Tab") {
+          // Close menu on 'Escape' or 'Tab', refocus trigger on 'Escape'
+          toggleMenu(false);
+          if (e.key === "Escape") trigger.focus();
+          e.preventDefault();
+          return;
+        }
+
+        if (/^[a-zA-Z]$/.test(e.key)) {
+          // Navigate to next item starting with the pressed letter
+          const lowercaseKey = e.key.toLowerCase();
+          let first = -1;
+          const next = letters.findIndex(function (letter, index) {
+            if (letter === lowercaseKey) {
+              if (first < 0) first = index;
+              return index > i;
+            }
+          });
+          const index = next > -1 ? next : first;
+          if (index > -1) items[index].focus();
+          e.preventDefault();
+        } else {
+          // Handle navigation keys (ArrowUp, ArrowDown, Home, End)
+          const navKeys: Record<string, number> = {
+            ArrowDown: i + 1,
+            ArrowUp: i - 1,
+            Home: 0,
+            End: items.length - 1,
+          };
+          if (e.key in navKeys) {
+            // Focus on the appropriate menu item based on the key pressed
+            items[(navKeys[e.key] + items.length) % items.length].focus();
+            e.preventDefault();
+          }
+        }
+      });
+    });
+  }
+
+  // Apply functionality to all matching elements on the page
+  document.querySelectorAll<HTMLElement>("astro-menu-button").forEach(AstroMenuButton);
+</script>
