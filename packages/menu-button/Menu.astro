@@ -2,7 +2,7 @@
 import { context } from "@astro-aria/context";
 
 type Props = {
-  id?: string;
+  [x: string]: any;
 };
 
 const { ...attributes } = Astro.props;
