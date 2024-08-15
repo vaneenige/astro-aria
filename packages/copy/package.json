@@ -1,0 +1,11 @@
+{
+  "name": "@astro-aria/copy",
+  "version": "0.0.1",
+  "main": "index.ts",
+  "author": "Colin van Eenige",
+  "license": "MIT",
+  "dependencies": {
+    "@astro-aria/context": "^0.0.4",
+    "@astro-aria/id": "^0.0.2"
+  }
+}

@@ -1,0 +1,48 @@
+---
+import Context from "@astro-aria/context";
+import id from "@astro-aria/id";
+import Trim from "@astro-aria/trim";
+
+type Props = {
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
+
+const dictionary = {
+  id: id(),
+};
+---
+
+<Trim>
+  <Context dictionary={dictionary}>
+    <astro-copy data-props={[dictionary.id]} {...attributes}>
+      <slot />
+    </astro-copy>
+  </Context>
+</Trim>
+
+<script>
+  function AstroCopy(root: HTMLElement) {
+    const [id] = root.dataset.props!.split(",");
+
+    const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
+    const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
+
+    if (trigger && content) {
+      trigger.addEventListener("click", () => {
+        if (content.textContent) {
+          navigator.clipboard.writeText(content.textContent);
+
+          trigger.dataset.state = "active";
+
+          setTimeout(() => {
+            trigger.dataset.state = "inactive";
+          }, 2000);
+        }
+      });
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>("astro-copy").forEach(AstroCopy);
+</script>

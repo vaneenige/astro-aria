@@ -1,0 +1,13 @@
+---
+import { context } from "@astro-aria/context";
+
+type Props = {
+  [x: string]: any;
+};
+
+const { ...attributes } = Astro.props;
+---
+
+<div id={`content:${context("id")}`} {...attributes}>
+  <slot />
+</div>
