@@ -1,6 +1,6 @@
 {
   "name": "@astro-aria/tabs",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "index.ts",
   "author": "Colin van Eenige",
   "license": "MIT",

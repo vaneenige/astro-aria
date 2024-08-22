@@ -15,8 +15,8 @@ const { orientation, activation, value, sync, ...attributes } = Astro.props;
 
 const dictionary = {
   id: id(),
-  orientation: orientation || "horizontal",
-  activation: activation || "automatic",
+  orientation: orientation ?? "horizontal",
+  activation: activation ?? "automatic",
   value,
 };
 ---
@@ -71,11 +71,13 @@ const dictionary = {
   function AstroTab(root: HTMLElement) {
     const [id, orientation, activation, sync] = root.dataset.props!.split(",");
 
-    const tabs = root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`);
-    const panels = root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`);
+    const tabs = [...root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`)];
+    const panels = [...root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`)];
 
     const { length } = tabs;
     const horizontal = !orientation;
+
+    let offset = 0;
 
     const keyActions = {
       [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) => (i + 1) % length,
@@ -84,21 +86,28 @@ const dictionary = {
       End: () => length - 1,
     };
 
-    function activateTabByIndex(index: number) {
-      const tab = tabs[index];
+    function activateTabById(id: string) {
+      const tab = tabs.find((t) => t.id.endsWith(id));
 
-      panels.forEach((p) => {
-        const match = p.id !== tab.getAttribute("aria-controls");
-        p.hidden = match;
-        p.dataset.state = !match ? "active" : "inactive";
-      });
+      if (tab) {
+        panels.forEach((p) => {
+          const match = p.id !== tab.getAttribute("aria-controls");
+          p.hidden = match;
+          p.dataset.state = !match ? "active" : "inactive";
+        });
 
-      tabs.forEach((t, i) => {
-        const match = i === index;
-        t.setAttribute("aria-selected", match ? "true" : "false");
-        t.setAttribute("tabindex", match ? "0" : "-1");
-        t.dataset.state = match ? "active" : "inactive";
-      });
+        tabs.forEach((t) => {
+          const match = t === tab;
+          t.setAttribute("aria-selected", String(match));
+          t.setAttribute("tabindex", match ? "0" : "-1");
+          t.dataset.state = match ? "active" : "inactive";
+        });
+
+        if (offset !== 0) {
+          scrollTo({ top: scrollY + root.getBoundingClientRect().top - offset });
+          offset = 0;
+        }
+      }
     }
 
     tabs.forEach((tab, i) => {
@@ -111,17 +120,19 @@ const dictionary = {
       });
 
       tab.addEventListener(activation, () => {
+        const id = tabs[i].id.split(":")[2];
+        offset = root.getBoundingClientRect().top;
         if (sync) {
-          emit([sync, i]);
+          emit([sync, id]);
         } else {
-          activateTabByIndex(i);
+          activateTabById(id);
         }
       });
     });
 
-    on(([tagName, index]) => {
+    on(([tagName, id]) => {
       if (tagName === sync) {
-        activateTabByIndex(index);
+        activateTabById(id);
       }
     });
   }
