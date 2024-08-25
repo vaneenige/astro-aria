@@ -1,0 +1,80 @@
+---
+type LengthValidationRule = {
+  selector: string;
+  length?: number;
+  errorMessage: string;
+};
+
+type EvaluateValidationRule = {
+  selector: string;
+  evaluate: string;
+  errorMessage: string;
+};
+
+type Props = {
+  rules: (LengthValidationRule | EvaluateValidationRule)[];
+  global?: boolean;
+};
+
+const { rules, global = false } = Astro.props;
+
+// Render default slot content
+const html = await Astro.slots.render("default");
+
+// Strip nested validated content if global is false
+const strippedHtml = global ? html : html.replace(/<!-- begin -->[\s\S]*?<!-- end -->/g, "");
+
+// Iterate through each validation rule
+rules.forEach((rule) => {
+  const matches = [...strippedHtml.matchAll(new RegExp(rule.selector, "g"))];
+
+  // Check if the rule specifies a required length
+  if ("length" in rule) {
+    if (matches.length !== rule.length) {
+      throw new Error(
+        `Expected \`${rule.length}\` matches for \`${rule.selector}\`, but found \`${matches.length}\`.`,
+      );
+    }
+  }
+  // Check if the rule specifies an evaluation comparison
+  else if ("evaluate" in rule) {
+    const evaluateMatches = [...strippedHtml.matchAll(new RegExp(rule.evaluate, "g"))];
+
+    // Ensure match counts are equal
+    if (matches.length !== evaluateMatches.length) {
+      throw new Error(
+        `Ensure \`${rule.selector}\` and \`${rule.evaluate}\` match the same number of times.`,
+      );
+    }
+
+    // Iterate through each match and compare capture groups
+    matches.forEach((match, index) => {
+      const evaluateMatch = evaluateMatches[index];
+
+      // Check if the number of capture groups is the same
+      if (match.length !== evaluateMatch.length) {
+        throw new Error(
+          `Ensure capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` match.`,
+        );
+      }
+
+      // Compare each capture group
+      for (let i = 1; i < match.length; i += 1) {
+        if (match[i] !== evaluateMatch[i]) {
+          throw new Error(
+            `Capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` must match.`,
+          );
+        }
+      }
+    });
+  }
+  // If no specific rule, check for basic presence
+  else if (matches.length === 0) {
+    throw new Error(`Match \`${rule.selector}\` at least once.`);
+  }
+});
+---
+
+<!-- begin -->
+<Fragment set:html={html} />
+<!-- end -->
