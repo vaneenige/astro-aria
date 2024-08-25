@@ -1,14 +1,15 @@
 ---
-type LengthValidationRule = {
+type ValidationRule = {
   selector: string;
-  length?: number;
-  errorMessage: string;
+  errorMessage?: string;
 };
 
-type EvaluateValidationRule = {
-  selector: string;
+type LengthValidationRule = ValidationRule & {
+  length?: number;
+};
+
+type EvaluateValidationRule = ValidationRule & {
   evaluate: string;
-  errorMessage: string;
 };
 
 type Props = {
@@ -32,7 +33,8 @@ rules.forEach((rule) => {
   if ("length" in rule) {
     if (matches.length !== rule.length) {
       throw new Error(
-        `Expected \`${rule.length}\` matches for \`${rule.selector}\`, but found \`${matches.length}\`.`,
+        rule.errorMessage ||
+          `Expected \`${rule.length}\` matches for \`${rule.selector}\`, but found \`${matches.length}\`.`,
       );
     }
   }
@@ -43,7 +45,8 @@ rules.forEach((rule) => {
     // Ensure match counts are equal
     if (matches.length !== evaluateMatches.length) {
       throw new Error(
-        `Ensure \`${rule.selector}\` and \`${rule.evaluate}\` match the same number of times.`,
+        rule.errorMessage ||
+          `Ensure \`${rule.selector}\` and \`${rule.evaluate}\` match the same number of times.`,
       );
     }
 
@@ -54,7 +57,8 @@ rules.forEach((rule) => {
       // Check if the number of capture groups is the same
       if (match.length !== evaluateMatch.length) {
         throw new Error(
-          `Ensure capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` match.`,
+          rule.errorMessage ||
+            `Ensure capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` match.`,
         );
       }
 
@@ -62,7 +66,8 @@ rules.forEach((rule) => {
       for (let i = 1; i < match.length; i += 1) {
         if (match[i] !== evaluateMatch[i]) {
           throw new Error(
-            `Capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` must match.`,
+            rule.errorMessage ||
+              `Capture groups in \`${rule.selector}\` and \`${rule.evaluate}\` must match.`,
           );
         }
       }
@@ -70,7 +75,7 @@ rules.forEach((rule) => {
   }
   // If no specific rule, check for basic presence
   else if (matches.length === 0) {
-    throw new Error(`Match \`${rule.selector}\` at least once.`);
+    throw new Error(rule.errorMessage || `Match \`${rule.selector}\` at least once.`);
   }
 });
 ---

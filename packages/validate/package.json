@@ -1,6 +1,6 @@
 {
   "name": "@astro-aria/validate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "Validate.astro",
   "author": "Colin van Eenige",
   "license": "MIT"
