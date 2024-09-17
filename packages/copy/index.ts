@@ -9,10 +9,3 @@ const Copy = {
 };
 
 export default Copy;
-
-export function extend(extended: { [x: string]: any }) {
-  return {
-    ...Copy,
-    ...extended,
-  };
-}

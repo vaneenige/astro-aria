@@ -23,26 +23,39 @@ const dictionary = {
 </Trim>
 
 <script>
-  function AstroCopy(root: HTMLElement) {
-    const [id] = root.dataset.props!.split(",");
+  class AstroCopy extends HTMLElement {
+    constructor() {
+      super();
 
-    const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
-    const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
+      // Get the component's root element and extract the ID from the dataset properties
+      const root = this;
+      const [id] = root.dataset.props!.split(",");
 
-    if (trigger && content) {
-      trigger.addEventListener("click", () => {
-        if (content.textContent) {
-          navigator.clipboard.writeText(content.textContent);
+      // Select the trigger and content elements based on the ID
+      const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
+      const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
 
-          trigger.dataset.state = "active";
+      // Check if both trigger and content elements exist
+      if (trigger && content) {
+        // Add a click event listener to the trigger element
+        trigger.addEventListener("click", () => {
+          // If the content has text, copy it to the clipboard
+          if (content.textContent) {
+            navigator.clipboard.writeText(content.textContent);
 
-          setTimeout(() => {
-            trigger.dataset.state = "inactive";
-          }, 2000);
-        }
-      });
+            // Set the trigger's state to "active" when clicked
+            trigger.dataset.state = "active";
+
+            // Reset the trigger's state to "inactive" after 2 seconds
+            setTimeout(() => {
+              trigger.dataset.state = "inactive";
+            }, 2000);
+          }
+        });
+      }
     }
   }
 
-  document.querySelectorAll<HTMLElement>("astro-copy").forEach(AstroCopy);
+  // Define the custom element
+  customElements.define("astro-copy", AstroCopy);
 </script>
