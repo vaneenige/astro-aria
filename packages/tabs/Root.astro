@@ -2,16 +2,16 @@
 import Context from "@astro-aria/context";
 import id from "@astro-aria/id";
 import Trim from "@astro-aria/trim";
+import children from "@astro-aria/children";
 
 type Props = {
-  sync?: string;
   orientation?: "horizontal" | "vertical";
   activation?: "automatic" | "manual";
   value?: string;
   [x: string]: any;
 };
 
-const { orientation, activation, value, sync, ...attributes } = Astro.props;
+const { orientation, activation, value, ...attributes } = Astro.props;
 
 const dictionary = {
   id: id(),
@@ -19,6 +19,13 @@ const dictionary = {
   activation: activation ?? "automatic",
   value,
 };
+
+const html = await Astro.slots.render("default");
+
+const nodes = children(html);
+
+const tabs = nodes.filter((node) => node.includes('id="tab:($context:id)'));
+const panels = nodes.filter((node) => node.includes('id="tabpanel:($context:id)'));
 ---
 
 <Trim>
@@ -50,11 +57,13 @@ const dictionary = {
         dictionary.id,
         dictionary.orientation === "horizontal" ? "" : "1",
         dictionary.activation === "automatic" ? "focus" : "click",
-        sync,
       ]}
       {...attributes}
     >
-      <slot />
+      <div role="tablist" aria-orientation={orientation}>
+        <Fragment set:html={tabs} />
+      </div>
+      <Fragment set:html={panels} />
     </astro-tabs>
   </Context>
 </Trim>
@@ -62,80 +71,101 @@ const dictionary = {
 <script>
   type Listener<T> = (state: T) => void;
 
-  const listeners: Listener<any>[] = [];
+  // Set up listeners array and utility functions for event handling
+  const listeners: Listener<string>[] = [];
   const [on, emit] = [
-    (listener: Listener<any>) => listeners.push(listener),
-    (state: any) => listeners.forEach((listener) => listener(state)),
+    (listener: Listener<string>) => listeners.push(listener),
+    (state: string) => listeners.forEach((listener) => listener(state)),
   ];
 
-  function AstroTab(root: HTMLElement) {
-    const [id, orientation, activation, sync] = root.dataset.props!.split(",");
+  class AstroTabs extends HTMLElement {
+    constructor() {
+      super();
 
-    const tabs = [...root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`)];
-    const panels = [...root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`)];
+      // Get the component's root element and dataset properties
+      const root = this;
+      const [id, orientation, activation] = root.dataset.props!.split(",");
 
-    const { length } = tabs;
-    const horizontal = !orientation;
+      // Select all tabs and panels based on the id
+      const tabs = [...root.querySelectorAll<HTMLElement>(`[id^="tab:${id}"]`)];
+      const panels = [...root.querySelectorAll<HTMLElement>(`[id^="tabpanel:${id}"]`)];
 
-    let offset = 0;
+      // Store the total number of tabs
+      const { length } = tabs;
 
-    const keyActions = {
-      [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) => (i + 1) % length,
-      [horizontal ? "ArrowLeft" : "ArrowUp"]: (i: number) => (i - 1 + length) % length,
-      Home: () => 0,
-      End: () => length - 1,
-    };
+      // Determine if the orientation is horizontal (true) or vertical (false)
+      const horizontal = !orientation;
 
-    function activateTabById(id: string) {
-      const tab = tabs.find((t) => t.id.endsWith(id));
+      // Track scroll offset for later adjustments
+      let offset = 0;
 
-      if (tab) {
-        panels.forEach((p) => {
-          const match = p.id !== tab.getAttribute("aria-controls");
-          p.hidden = match;
-          p.dataset.state = !match ? "active" : "inactive";
-        });
+      // Define keyboard navigation actions based on orientation
+      const keyActions = {
+        [horizontal ? "ArrowRight" : "ArrowDown"]: (i: number) => (i + 1) % length,
+        [horizontal ? "ArrowLeft" : "ArrowUp"]: (i: number) => (i - 1 + length) % length,
+        Home: () => 0,
+        End: () => length - 1,
+      };
 
-        tabs.forEach((t) => {
-          const match = t === tab;
-          t.setAttribute("aria-selected", String(match));
-          t.setAttribute("tabindex", match ? "0" : "-1");
-          t.dataset.state = match ? "active" : "inactive";
-        });
+      // Function to activate a tab and its corresponding panel by ID
+      function activateTabById(id: string) {
+        // Find the tab matching the given ID
+        const tab = tabs.find((t) => t.id.endsWith(id));
 
-        if (offset !== 0) {
-          scrollTo({ top: scrollY + root.getBoundingClientRect().top - offset });
-          offset = 0;
+        if (tab) {
+          // Show/hide panels based on the selected tab
+          panels.forEach((p) => {
+            const match = p.id !== tab.getAttribute("aria-controls");
+            p.hidden = match;
+            p.dataset.state = !match ? "active" : "inactive";
+          });
+
+          // Update tab selection state and focus
+          tabs.forEach((t) => {
+            const match = t === tab;
+            t.setAttribute("aria-selected", String(match));
+            t.setAttribute("tabindex", match ? "0" : "-1");
+            t.dataset.state = match ? "active" : "inactive";
+          });
+
+          // Adjust scroll position if necessary
+          if (offset !== 0) {
+            scrollTo({ top: scrollY + root.getBoundingClientRect().top - offset });
+            offset = 0;
+          }
         }
       }
+
+      // Add event listeners to each tab for keyboard and activation events
+      tabs.forEach((tab, i) => {
+        // Handle keyboard navigation
+        tab.addEventListener("keydown", (e) => {
+          const focusTargetIndex = keyActions[e.key]?.(i) ?? i;
+          if (focusTargetIndex !== i) {
+            e.preventDefault();
+            tabs[focusTargetIndex].focus();
+          }
+        });
+
+        // Handle tab activation
+        tab.addEventListener(activation, () => {
+          const id = tabs[i].id.split(":")[2];
+          offset = root.getBoundingClientRect().top;
+          if (isNaN(Number(id))) {
+            // Emit event for custom ID
+            emit(id);
+          } else {
+            // Activate by numeric ID
+            activateTabById(id);
+          }
+        });
+      });
+
+      // Listen for external tab activation events
+      on(activateTabById);
     }
-
-    tabs.forEach((tab, i) => {
-      tab.addEventListener("keydown", (e) => {
-        const focusTargetIndex = keyActions[e.key]?.(i) ?? i;
-        if (focusTargetIndex !== i) {
-          e.preventDefault();
-          tabs[focusTargetIndex].focus();
-        }
-      });
-
-      tab.addEventListener(activation, () => {
-        const id = tabs[i].id.split(":")[2];
-        offset = root.getBoundingClientRect().top;
-        if (sync) {
-          emit([sync, id]);
-        } else {
-          activateTabById(id);
-        }
-      });
-    });
-
-    on(([tagName, id]) => {
-      if (tagName === sync) {
-        activateTabById(id);
-      }
-    });
   }
 
-  document.querySelectorAll<HTMLElement>("astro-tabs").forEach(AstroTab);
+  // Define the custom element
+  customElements.define("astro-tabs", AstroTabs);
 </script>
