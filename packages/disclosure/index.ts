@@ -10,9 +10,3 @@ const Disclosure = {
 
 export default Disclosure;
 
-export function extend(extended: { [x: string]: any }) {
-  return {
-    ...Disclosure,
-    ...extended,
-  };
-}

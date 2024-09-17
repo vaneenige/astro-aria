@@ -24,30 +24,52 @@ const dictionary = {
       hidden: [false, true],
     }}
   >
-    <astro-disclosure data-props={[dictionary.id, dictionary.open ? "" : "1"]} {...attributes}>
+    <astro-disclosure
+      data-props={[dictionary.id, dictionary.open ? "" : "1"]}
+      {...attributes}
+    >
       <slot />
     </astro-disclosure>
   </Context>
 </Trim>
 
 <script>
-  function AstroDisclosure(root: HTMLElement) {
-    const [id, open] = root.dataset.props!.split(",");
+  class AstroDisclosure extends HTMLElement {
+    constructor() {
+      super();
 
-    const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
-    const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
+      // Get the component's root element and extract ID and open state from the dataset properties
+      const root = this;
+      const [id, open] = root.dataset.props!.split(",");
 
-    if (trigger && content) {
-      let isOpen = !open;
-      trigger.addEventListener("click", () => {
-        isOpen = !isOpen;
-        trigger.dataset.state = isOpen ? "active" : "inactive";
-        content.dataset.state = isOpen ? "active" : "inactive";
-        trigger.setAttribute("aria-expanded", isOpen ? "true" : "false");
-        content.hidden = !isOpen;
-      });
+      // Select the trigger and content elements based on the ID
+      const trigger = root.querySelector<HTMLElement>(`[id="trigger:${id}"]`);
+      const content = root.querySelector<HTMLElement>(`[id="content:${id}"]`);
+
+      // Check if both trigger and content elements exist
+      if (trigger && content) {
+        // Initialize the open state (convert the initial 'open' value)
+        let isOpen = !open;
+
+        // Add a click event listener to the trigger element
+        trigger.addEventListener("click", () => {
+          // Toggle the open state on click
+          isOpen = !isOpen;
+
+          // Update trigger and content states based on the new open state
+          trigger.dataset.state = isOpen ? "active" : "inactive";
+          content.dataset.state = isOpen ? "active" : "inactive";
+
+          // Update ARIA attributes for accessibility
+          trigger.setAttribute("aria-expanded", String(isOpen));
+
+          // Show or hide the content based on the open state
+          content.hidden = !isOpen;
+        });
+      }
     }
   }
 
-  document.querySelectorAll<HTMLElement>("astro-disclosure").forEach(AstroDisclosure);
+  // Define the custom element
+  customElements.define("astro-disclosure", AstroDisclosure);
 </script>
