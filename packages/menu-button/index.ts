@@ -11,10 +11,3 @@ const MenuButton = {
 };
 
 export default MenuButton;
-
-export function extend(extended: { [x: string]: any }) {
-  return {
-    ...MenuButton,
-    ...extended,
-  };
-}
