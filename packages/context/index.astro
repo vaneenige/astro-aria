@@ -28,7 +28,7 @@ html = html.replace(
     const option = (attributes[attribute] || ["true", "false"])[isMatch ? 0 : 1];
 
     // Return modified attribute or remove it if false
-    return typeof option === "boolean" ? (option ? attribute : "") : `${attribute}="${option}"`;
+    return typeof option === "boolean" ? (option ? attribute.replace('data-', '') : "") : `${attribute}="${option}"`;
   },
 );
 
