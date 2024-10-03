@@ -12,7 +12,7 @@ const { ...attributes } = Astro.props;
   id={`content:${context("id")}`}
   aria-labelledby={`trigger:${context("id")}`}
   data-state={context("open")}
-  hidden={context("open")}
+  data-hidden={context("open")}
   {...attributes}
 >
   <slot />

@@ -1,11 +1,11 @@
 {
   "name": "@astro-aria/disclosure",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "index.ts",
   "author": "Colin van Eenige",
   "license": "MIT",
   "dependencies": {
-    "@astro-aria/context": "^0.0.4",
+    "@astro-aria/context": "^0.0.5",
     "@astro-aria/id": "^0.0.2",
     "@astro-aria/trim": "^0.0.2"
   }
