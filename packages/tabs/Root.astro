@@ -34,7 +34,7 @@ const panels = nodes.filter((node) => node.includes('id="tabpanel:($context:id)'
     attributes={{
       tabindex: ["0", "-1"],
       "data-state": ["active", "inactive"],
-      hidden: [false, true],
+      "data-hidden": [false, true],
     }}
     modifier={(html) => {
       let tabIndex = 0;
