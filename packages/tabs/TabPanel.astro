@@ -17,7 +17,7 @@ const html = await Astro.slots.render("default");
   id={`tabpanel:${context("id")}:${id}`}
   aria-labelledby={`tab:${context("id")}:${id}`}
   tabindex={hasFocusableElement(html) ? "-1" : "0"}
-  hidden={context("value", id)}
+  data-hidden={context("value", id)}
   data-state={context("value", id)}
   {...attributes}
 >
