@@ -18,7 +18,7 @@ if (components) {
   let match;
 
   // Build regex for component tags
-  const componentTags = Object.keys(components).join("|");
+  const componentTags = Object.keys(components).sort().reverse().join("|");
 
   // First, match self-closing or opening tags
   const tagRegex = new RegExp(
