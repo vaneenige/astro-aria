@@ -1,0 +1,114 @@
+---
+import { AstroComponentFactory } from "astro/dist/runtime/server/render/astro/factory";
+
+// Define Queue type: string or [component, attributes, optional inner HTML]
+type Queue = (
+  | string
+  | [AstroComponentFactory, Record<string, string>, string?]
+)[];
+
+// Extract HTML (or fallback to default slot) and components from Astro props
+const { html = await Astro.slots.render("default"), components } = Astro.props;
+
+// Initialize queue for parsed HTML and components
+let queue: Queue = [];
+
+if (components) {
+  let lastIndex = 0;
+  let match;
+
+  // Build regex for component tags
+  const componentTags = Object.keys(components).join("|");
+
+  // First, match self-closing or opening tags
+  const tagRegex = new RegExp(
+    `<(${componentTags})\\b([^>]*)\\s*(?:\\/\\s*>|>)`,
+    "g"
+  );
+
+  // Define regex to match opening or closing tags for nested structures
+  const openCloseTagRegex = new RegExp(
+    `<(${componentTags})\\b[^>]*>|<\\/(${componentTags})>`,
+    "g"
+  );
+
+  while ((match = tagRegex.exec(html))) {
+    // Add plain HTML before match to queue
+    if (match.index > lastIndex) {
+      queue.push(html.slice(lastIndex, match.index));
+    }
+
+    let attributes = {};
+    match[2].replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, key, value) => {
+      attributes[key] = value;
+    });
+
+    // Check for self-closing tag
+    if (match[0].endsWith("/>")) {
+      // Add self-closing component directly to queue
+      queue.push([components[match[1]], attributes]);
+      lastIndex = match.index + match[0].length;
+      continue;
+    }
+
+    // Handle non-self-closing tag: find corresponding closing tag
+    let startIndex = match.index + match[0].length;
+    let stack = 1;
+    let innerHtml = "";
+    let closingMatch;
+
+    // Find corresponding closing tag, accounting for nesting
+    openCloseTagRegex.lastIndex = startIndex; // Set search position after the opening tag
+    while ((closingMatch = openCloseTagRegex.exec(html))) {
+      if (closingMatch[1]) {
+        // Found opening tag, increment stack
+        stack++;
+      } else if (closingMatch[2]) {
+        // Found closing tag, decrement stack
+        stack--;
+      }
+
+      if (stack === 0) {
+        // Stack is 0: found matching closing tag
+        innerHtml = html.slice(startIndex, closingMatch.index);
+
+        // Update lastIndex to continue after closing tag
+        lastIndex = closingMatch.index + closingMatch[0].length;
+
+        // Skip inner HTML to avoid reprocessing nested components
+        tagRegex.lastIndex = lastIndex;
+        break;
+      }
+    }
+
+    // Add component with inner HTML to queue
+    queue.push([components[match[1]], attributes, innerHtml]);
+  }
+
+  // Add remaining plain HTML after last match
+  if (lastIndex < html.length) {
+    queue.push(html.slice(lastIndex));
+  }
+}
+---
+
+{
+  queue.length ? (
+    queue.map((item) => {
+      if (typeof item === "string") {
+        return <Fragment set:html={item} />;
+      }
+      const [Component, attributes, html] = item;
+      if (!html) {
+        return <Component {...attributes} />;
+      }
+      return (
+        <Component {...attributes}>
+          <Astro.self html={html} components={components} />
+        </Component>
+      );
+    })
+  ) : (
+    <Fragment set:html={html} />
+  )
+}
