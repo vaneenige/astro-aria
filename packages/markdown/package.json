@@ -1,6 +1,6 @@
 {
   "name": "@astro-aria/markdown",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "Markdown.astro",
   "author": "Colin van Eenige",
   "license": "MIT"

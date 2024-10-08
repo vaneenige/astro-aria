@@ -18,17 +18,11 @@ if (components) {
   let match;
 
   // Build regex for component tags
-  const componentTags = Object.keys(components).sort().reverse().join("|");
+  const componentTags = Object.keys(components).join("|");
 
   // First, match self-closing or opening tags
   const tagRegex = new RegExp(
-    `<(${componentTags})\\b([^>]*)\\s*(?:\\/\\s*>|>)`,
-    "g"
-  );
-
-  // Define regex to match opening or closing tags for nested structures
-  const openCloseTagRegex = new RegExp(
-    `<(${componentTags})\\b[^>]*>|<\\/(${componentTags})>`,
+    `<(${componentTags})(\\s[^>]*)?\\s*(?:\\/\\s*>|>)`,
     "g"
   );
 
@@ -39,9 +33,10 @@ if (components) {
     }
 
     let attributes = {};
-    match[2].replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, key, value) => {
-      attributes[key] = value;
-    });
+    match[2] &&
+      match[2].replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, key, value) => {
+        attributes[key] = value;
+      });
 
     // Check for self-closing tag
     if (match[0].endsWith("/>")) {
@@ -57,8 +52,16 @@ if (components) {
     let innerHtml = "";
     let closingMatch;
 
+    // Create regex to match the specific open/close tag pair
+    const openCloseTagRegex = new RegExp(
+      `<(${match[1]})(?=\\s|\\/|>|$)[^>]*>|<\\/(${match[1]})>`,
+      "g"
+    );
+
+    // Set search position after the opening tag
+    openCloseTagRegex.lastIndex = startIndex;
+
     // Find corresponding closing tag, accounting for nesting
-    openCloseTagRegex.lastIndex = startIndex; // Set search position after the opening tag
     while ((closingMatch = openCloseTagRegex.exec(html))) {
       if (closingMatch[1]) {
         // Found opening tag, increment stack
