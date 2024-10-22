@@ -7,6 +7,16 @@ export default (html: string) => {
   for (let i = 0; i < html.length; i += 1) {
     // Check for the opening of a tag
     if (html[i] === "<") {
+      const tag = html.slice(i, html.indexOf(">", i) + 1);
+
+      // Check if it's a <code> opening tag
+      if (tag.startsWith("<code")) {
+        // Skip past the </code> tag 
+        i = html.indexOf("</code>", i) + 6;
+        // Move on to the next iteration
+        continue;
+      }
+
       // Handle closing tags by decrementing the stack
       if (html[i + 1] === "/") stack -= 1;
       // Handle opening tags by incrementing the stack and marking the start of a new tag
