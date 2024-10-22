@@ -21,6 +21,8 @@ html = html
   .replace(/(<\w+[^>]*>)\s+([^\s<]+)/g, "$1$2")
   // Remove space before a closing tag and after text
   .replace(/([^\s<]+)\s+(<\/\w+>)/g, "$1$2")
+  // Remove space before a comma or period
+  .replace(/\s+(?=[,.])/g, "")
   // Reinsert <code> content from placeholders
   .replace(/{{CODE}}/g, () => codeContent.shift()!);
 ---
