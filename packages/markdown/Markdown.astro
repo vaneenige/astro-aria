@@ -20,11 +20,8 @@ if (components) {
   // Build regex for component tags
   const componentTags = Object.keys(components).join("|");
 
-  // First, match self-closing or opening tags
-  const tagRegex = new RegExp(
-    `<(${componentTags})(\\s[^>]*)?\\s*(?:\\/\\s*>|>)`,
-    "g"
-  );
+  // Match all opening tags
+  const tagRegex = new RegExp(`<(${componentTags})(\\s[^>]*)?\\s*>`, "g");
 
   while ((match = tagRegex.exec(html))) {
     // Add plain HTML before match to queue
@@ -33,20 +30,21 @@ if (components) {
     }
 
     let attributes = {};
-    match[2] &&
+    if (match[2]) {
       match[2].replace(/(\w+)\s*=\s*"([^"]*)"/g, (_, key, value) => {
         attributes[key] = value;
       });
+    }
 
-    // Check for self-closing tag
-    if (match[0].endsWith("/>")) {
-      // Add self-closing component directly to queue
+    // Check if a closing tag exists to handle self-contained tags
+    const closingTagRegex = new RegExp(`</${match[1]}>`);
+    if (!closingTagRegex.test(html.slice(match.index))) {
       queue.push([components[match[1]], attributes]);
       lastIndex = match.index + match[0].length;
       continue;
     }
 
-    // Handle non-self-closing tag: find corresponding closing tag
+    // Find the corresponding closing tag
     let startIndex = match.index + match[0].length;
     let stack = 1;
     let innerHtml = "";
